@@ -63,8 +63,7 @@ export default function Billing() {
   const [selectedStalls, setSelectedStalls] = useState<string[]>([]);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [customerMobile, setCustomerMobile] = useState("");
+  const [billRemarks, setBillRemarks] = useState("");
   const [counterNumberInput, setCounterNumberInput] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -102,8 +101,7 @@ export default function Billing() {
   const [editBillDialogOpen, setEditBillDialogOpen] = useState(false);
   const [editingBill, setEditingBill] = useState<any>(null);
   const [editBillForm, setEditBillForm] = useState({
-    customer_name: "",
-    customer_mobile: "",
+    remarks: "",
     total: ""
   });
   const [returnReason, setReturnReason] = useState("");
@@ -227,7 +225,7 @@ export default function Billing() {
 
   // Create bill mutation
   const createBillMutation = useMutation({
-    mutationFn: async (bill: { stall_id: string; items: BillItem[]; subtotal: number; total: number; customer_name?: string; customer_mobile?: string }) => {
+    mutationFn: async (bill: { stall_id: string; items: BillItem[]; subtotal: number; total: number; remarks?: string }) => {
       const receiptNumber = `BILL-${Date.now()}`;
       const { data, error } = await supabase
         .from('billing_transactions')
@@ -238,8 +236,7 @@ export default function Billing() {
           total: bill.total,
           receipt_number: receiptNumber,
           status: 'pending',
-          customer_name: bill.customer_name || null,
-          customer_mobile: bill.customer_mobile || null
+          remarks: bill.remarks || null
         })
         .select()
         .single();
@@ -250,8 +247,7 @@ export default function Billing() {
       queryClient.invalidateQueries({ queryKey: ['billing_transactions'] });
       setBillItems([]);
       setSelectedStalls([]);
-      setCustomerName("");
-      setCustomerMobile("");
+      setBillRemarks("");
       setCounterNumberInput("");
       toast.success("Bill generated successfully!");
     },
@@ -322,12 +318,11 @@ export default function Billing() {
 
   // Update bill mutation
   const updateBillMutation = useMutation({
-    mutationFn: async (data: { id: string; customer_name?: string; customer_mobile?: string; total: number }) => {
+    mutationFn: async (data: { id: string; remarks?: string; total: number }) => {
       const { error } = await supabase
         .from('billing_transactions')
         .update({
-          customer_name: data.customer_name || null,
-          customer_mobile: data.customer_mobile || null,
+          remarks: data.remarks || null,
           total: data.total,
           subtotal: data.total
         })
@@ -594,8 +589,7 @@ export default function Billing() {
       items: billItems,
       subtotal: total,
       total: total,
-      customer_name: customerName.trim() || undefined,
-      customer_mobile: customerMobile.trim() || undefined
+      remarks: billRemarks.trim() || undefined
     });
   };
 
@@ -642,8 +636,7 @@ export default function Billing() {
     if (pendingAction?.type === 'edit') {
       setEditingBill(pendingAction.bill);
       setEditBillForm({
-        customer_name: pendingAction.bill.customer_name || "",
-        customer_mobile: pendingAction.bill.customer_mobile || "",
+        remarks: pendingAction.bill.remarks || "",
         total: pendingAction.bill.total?.toString() || ""
       });
       setEditBillDialogOpen(true);
@@ -663,8 +656,7 @@ export default function Billing() {
     }
     updateBillMutation.mutate({
       id: editingBill.id,
-      customer_name: editBillForm.customer_name || undefined,
-      customer_mobile: editBillForm.customer_mobile || undefined,
+      remarks: editBillForm.remarks || undefined,
       total: parseFloat(editBillForm.total)
     });
   };
@@ -1053,28 +1045,16 @@ export default function Billing() {
                         </div>
                       </div>
 
-                      {/* Customer Info (Optional) */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <Label htmlFor="customerName" className="text-xs">Customer Name (Optional)</Label>
-                          <Input
-                            id="customerName"
-                            value={customerName}
-                            onChange={(e) => setCustomerName(e.target.value)}
-                            placeholder="Enter name"
-                            maxLength={100}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="customerMobile" className="text-xs">Mobile (Optional)</Label>
-                          <Input
-                            id="customerMobile"
-                            value={customerMobile}
-                            onChange={(e) => setCustomerMobile(e.target.value)}
-                            placeholder="Enter mobile"
-                            maxLength={15}
-                          />
-                        </div>
+                      {/* Remarks (Optional) */}
+                      <div className="space-y-1">
+                        <Label htmlFor="billRemarks" className="text-xs">Remarks (Optional)</Label>
+                        <Input
+                          id="billRemarks"
+                          value={billRemarks}
+                          onChange={(e) => setBillRemarks(e.target.value)}
+                          placeholder="Enter remarks"
+                          maxLength={200}
+                        />
                       </div>
                       
                       <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
@@ -1986,21 +1966,12 @@ export default function Billing() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-bill-name">Customer Name</Label>
+                  <Label htmlFor="edit-bill-remarks">Remarks</Label>
                   <Input
-                    id="edit-bill-name"
-                    value={editBillForm.customer_name}
-                    onChange={(e) => setEditBillForm({ ...editBillForm, customer_name: e.target.value })}
-                    placeholder="Enter customer name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-bill-mobile">Customer Mobile</Label>
-                  <Input
-                    id="edit-bill-mobile"
-                    value={editBillForm.customer_mobile}
-                    onChange={(e) => setEditBillForm({ ...editBillForm, customer_mobile: e.target.value })}
-                    placeholder="Enter customer mobile"
+                    id="edit-bill-remarks"
+                    value={editBillForm.remarks}
+                    onChange={(e) => setEditBillForm({ ...editBillForm, remarks: e.target.value })}
+                    placeholder="Enter remarks"
                   />
                 </div>
                 <div className="space-y-2">
