@@ -93,6 +93,7 @@ export type Database = {
           id: string
           items: Json
           receipt_number: string
+          remarks: string | null
           serial_number: number | null
           stall_id: string
           status: string
@@ -106,6 +107,7 @@ export type Database = {
           id?: string
           items?: Json
           receipt_number: string
+          remarks?: string | null
           serial_number?: number | null
           stall_id: string
           status?: string
@@ -119,6 +121,7 @@ export type Database = {
           id?: string
           items?: Json
           receipt_number?: string
+          remarks?: string | null
           serial_number?: number | null
           stall_id?: string
           status?: string
