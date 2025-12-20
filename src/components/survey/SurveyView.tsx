@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Video, Image, FileText, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Video, Image, FileText, X, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface SurveyContent {
   id: string;
@@ -196,28 +197,62 @@ export function SurveyView() {
               {posters.map((poster, index) => (
                 <div 
                   key={poster.id} 
-                  className="cursor-pointer group"
-                  onClick={() => {
-                    if (poster.content_url) {
-                      setCurrentPosterIndex(index);
-                      setFullscreenPoster(poster);
-                    }
-                  }}
+                  className="group relative"
                 >
-                  <AspectRatio ratio={1} className="bg-muted rounded-lg overflow-hidden group-hover:ring-2 group-hover:ring-primary transition-all">
-                    {poster.content_url ? (
-                      <img
-                        src={poster.content_url}
-                        alt={poster.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Image className="h-8 w-8 text-muted-foreground" />
-                      </div>
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => {
+                      if (poster.content_url) {
+                        setCurrentPosterIndex(index);
+                        setFullscreenPoster(poster);
+                      }
+                    }}
+                  >
+                    <AspectRatio ratio={1} className="bg-muted rounded-lg overflow-hidden group-hover:ring-2 group-hover:ring-primary transition-all">
+                      {poster.content_url ? (
+                        <img
+                          src={poster.content_url}
+                          alt={poster.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <Image className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </AspectRatio>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-muted-foreground truncate flex-1">{poster.title}</p>
+                    {poster.content_url && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (navigator.share) {
+                            try {
+                              await navigator.share({
+                                title: poster.title,
+                                url: poster.content_url!,
+                              });
+                            } catch (err) {
+                              if ((err as Error).name !== 'AbortError') {
+                                await navigator.clipboard.writeText(poster.content_url!);
+                                toast.success("Image link copied to clipboard");
+                              }
+                            }
+                          } else {
+                            await navigator.clipboard.writeText(poster.content_url!);
+                            toast.success("Image link copied to clipboard");
+                          }
+                        }}
+                      >
+                        <Share2 className="h-3 w-3" />
+                      </Button>
                     )}
-                  </AspectRatio>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">{poster.title}</p>
+                  </div>
                 </div>
               ))}
             </div>
