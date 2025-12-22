@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Store, Send, CheckCircle, Plus, Trash2, MessageCircle, HelpCircle } from 'lucide-react';
@@ -54,6 +56,7 @@ const PRODUCT_FIELD_IDS = [
 
 export default function StallEnquiry() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [selectedPanchayath, setSelectedPanchayath] = useState('');
@@ -63,6 +66,9 @@ export default function StallEnquiry() {
   const [products, setProducts] = useState<Product[]>([
     { product_name: '', cost_price: '', selling_price: '', selling_unit: '', has_brand: '', brand_name: '' }
   ]);
+  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [helpMobile, setHelpMobile] = useState('');
+  const [helpSubmitting, setHelpSubmitting] = useState(false);
 
   // Fetch form fields
   const { data: fields = [] } = useQuery({
@@ -285,24 +291,33 @@ ${products.map((p, i) => `${i + 1}. ${p.product_name} - CP: ₹${p.cost_price}, 
     );
   }
 
-  const handleNeedHelp = async () => {
+  const handleNeedHelpSubmit = async () => {
+    if (!helpMobile.trim() || helpMobile.length < 10) {
+      toast({ title: 'സാധുവായ മൊബൈൽ നമ്പർ നൽകുക', variant: 'destructive' });
+      return;
+    }
+    
+    setHelpSubmitting(true);
     try {
       const { error } = await supabase
         .from('stall_enquiry_help_requests')
         .insert({
           name: name || null,
-          mobile: mobile || null,
+          mobile: helpMobile.trim(),
           message: 'Need help with stall enquiry form'
         });
       
       if (error) throw error;
       
       toast({ title: 'സഹായ അഭ്യർത്ഥന അയച്ചു!' });
-      // Open admin page in new tab
-      window.open('/admin/stall-enquiry?tab=help-requests', '_blank');
+      setHelpDialogOpen(false);
+      setHelpMobile('');
+      navigate('/survey-view');
     } catch (error) {
       console.error('Error:', error);
       toast({ title: 'സഹായ അഭ്യർത്ഥന അയയ്ക്കാനായില്ല', variant: 'destructive' });
+    } finally {
+      setHelpSubmitting(false);
     }
   };
 
@@ -313,14 +328,45 @@ ${products.map((p, i) => `${i + 1}. ${p.product_name} - CP: ₹${p.cost_price}, 
         <div className="flex justify-end mb-4">
           <Button
             type="button"
-            variant="outline"
-            onClick={handleNeedHelp}
-            className="bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100"
+            onClick={() => setHelpDialogOpen(true)}
+            className="bg-[#25D366] hover:bg-[#1da851] text-white border-0"
           >
             <HelpCircle className="h-4 w-4 mr-2" />
             സഹായം വേണം
           </Button>
         </div>
+
+        {/* Help Dialog */}
+        <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center">സഹായം ആവശ്യമുണ്ടോ?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div>
+                <Label htmlFor="help-mobile">മൊബൈൽ നമ്പർ *</Label>
+                <Input
+                  id="help-mobile"
+                  type="tel"
+                  value={helpMobile}
+                  onChange={(e) => setHelpMobile(e.target.value)}
+                  placeholder="നിങ്ങളുടെ മൊബൈൽ നമ്പർ"
+                  className="mt-1"
+                />
+              </div>
+              {helpMobile.trim().length >= 10 && (
+                <Button
+                  onClick={handleNeedHelpSubmit}
+                  disabled={helpSubmitting}
+                  className="w-full bg-[#25D366] hover:bg-[#1da851] text-white"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {helpSubmitting ? 'അയയ്ക്കുന്നു...' : 'അയയ്ക്കുക'}
+                </Button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader>
