@@ -236,7 +236,7 @@ export default function Accounts() {
     .filter((p: any) => p.payment_type === "other")
     .reduce((sum: number, p: any) => sum + (p.amount_paid || 0), 0);
 
-  const totalPaid = otherPaymentsTotal;
+  const totalPaid = stallPaymentsTotal + otherPaymentsTotal;
   const cashBalance = totalCollected - totalPaid;
 
   const empBookingTotal = registrations
