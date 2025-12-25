@@ -138,6 +138,54 @@ export type Database = {
           },
         ]
       }
+      customer_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          mobile: string
+          name: string
+          panchayath_id: string | null
+          place: string
+          updated_at: string
+          ward_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mobile: string
+          name: string
+          panchayath_id?: string | null
+          place: string
+          updated_at?: string
+          ward_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mobile?: string
+          name?: string
+          panchayath_id?: string | null
+          place?: string
+          updated_at?: string
+          ward_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_registrations_panchayath_id_fkey"
+            columns: ["panchayath_id"]
+            isOneToOne: false
+            referencedRelation: "panchayaths"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_registrations_ward_id_fkey"
+            columns: ["ward_id"]
+            isOneToOne: false
+            referencedRelation: "wards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_coupon_bookings: {
         Row: {
           created_at: string

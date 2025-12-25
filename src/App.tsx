@@ -25,7 +25,9 @@ import PermissionManagement from "./pages/PermissionManagement";
 import SurveyAdmin from "./pages/admin/SurveyAdmin";
 import StallEnquiryAdmin from "./pages/admin/StallEnquiryAdmin";
 import FoodCouponAdmin from "./pages/admin/FoodCouponAdmin";
+import CustomerManagement from "./pages/admin/CustomerManagement";
 import StallEnquiry from "./pages/StallEnquiry";
+import CustomerRegistration from "./pages/CustomerRegistration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +49,7 @@ const App = () => (
               <Route path="/survey-view" element={<SurveyViewPage />} />
               <Route path="/stall-enquiry" element={<StallEnquiry />} />
               <Route path="/food-coupon" element={<FoodCoupon />} />
+              <Route path="/customer-registration" element={<CustomerRegistration />} />
               <Route path="/stall-login" element={<StallLogin />} />
               <Route path="/admin-login" element={<AdminLogin />} />
               
@@ -62,6 +65,7 @@ const App = () => (
               <Route path="/admin/survey" element={<SurveyAdmin />} />
               <Route path="/admin/stall-enquiry" element={<StallEnquiryAdmin />} />
               <Route path="/admin/food-coupon" element={<FoodCouponAdmin />} />
+              <Route path="/admin/customers" element={<CustomerManagement />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
