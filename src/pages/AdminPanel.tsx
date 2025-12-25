@@ -8,10 +8,10 @@ import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { 
   Shield, Users, Settings, LogOut, UserPlus, Key, 
   Receipt, Calendar, Camera, UserCheck, UtensilsCrossed, Wallet,
-  ClipboardList, Store, Utensils
+  ClipboardList, Store, Utensils, UsersRound
 } from 'lucide-react';
 
-type AppModule = 'billing' | 'team' | 'programs' | 'accounts' | 'food_court' | 'photos' | 'registrations' | 'survey' | 'stall_enquiry' | 'food_coupon';
+type AppModule = 'billing' | 'team' | 'programs' | 'accounts' | 'food_court' | 'photos' | 'registrations' | 'survey' | 'stall_enquiry' | 'food_coupon' | 'customers';
 
 const moduleConfig: Record<AppModule, { label: string; description: string; icon: typeof Shield; href: string; color: string }> = {
   billing: { label: 'Billing', description: 'Manage bills and transactions', icon: Receipt, href: '/billing', color: 'blue' },
@@ -24,6 +24,7 @@ const moduleConfig: Record<AppModule, { label: string; description: string; icon
   survey: { label: 'Survey Management', description: 'Manage panchayaths, wards & survey content', icon: ClipboardList, href: '/admin/survey', color: 'emerald' },
   stall_enquiry: { label: 'Stall Enquiry', description: 'Manage stall enquiries', icon: Store, href: '/admin/stall-enquiry', color: 'amber' },
   food_coupon: { label: 'Food Coupon', description: 'Manage food options and bookings', icon: Utensils, href: '/admin/food-coupon', color: 'orange' },
+  customers: { label: 'Customer Management', description: 'Manage registered customers', icon: UsersRound, href: '/admin/customers', color: 'teal' },
 };
 
 export default function AdminPanel() {

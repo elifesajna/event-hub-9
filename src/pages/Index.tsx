@@ -1,8 +1,15 @@
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ModuleCard } from "@/components/dashboard/ModuleCard";
-import { CalendarDays, Camera, ClipboardList, Store, Utensils } from "lucide-react";
+import { CalendarDays, Camera, ClipboardList, Store, Utensils, UserPlus } from "lucide-react";
 
 const modules = [
+  {
+    title: "Customer Registration",
+    description: "Register for the event and get updates.",
+    icon: UserPlus,
+    href: "/customer-registration",
+    color: "primary" as const
+  },
   {
     title: "Program Scheduling",
     description: "Manage event programs, assign dates, times, and venues with location mapping.",
