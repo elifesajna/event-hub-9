@@ -2135,36 +2135,36 @@ export default function Billing() {
 
                   {/* Stall Payment Section */}
                   <Card className="border-green-500/30">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Wallet className="h-5 w-5 text-green-600" />
+                    <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
+                      <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                        <Wallet className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                         Stall Payment
                       </CardTitle>
                       {!showStallPaymentForm && stallRemainingBalance > 0 && (
                         <Button 
                           size="sm" 
                           onClick={() => setShowStallPaymentForm(true)}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-green-600 hover:bg-green-700 text-xs md:text-sm"
                         >
-                          <Plus className="h-4 w-4 mr-1" />
+                          <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                           Make Payment
                         </Button>
                       )}
                     </CardHeader>
                     <CardContent>
                       {/* Payment Summary */}
-                      <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                         <div className="p-3 bg-muted/50 rounded-lg">
                           <p className="text-xs text-muted-foreground">Balance (After Commission)</p>
-                          <p className="text-lg font-semibold">₹{stallBalance.toFixed(0)}</p>
+                          <p className="text-base md:text-lg font-semibold">₹{stallBalance.toFixed(0)}</p>
                         </div>
                         <div className="p-3 bg-green-500/10 rounded-lg">
                           <p className="text-xs text-muted-foreground">Already Paid</p>
-                          <p className="text-lg font-semibold text-green-600">₹{stallAlreadyPaid.toFixed(0)}</p>
+                          <p className="text-base md:text-lg font-semibold text-green-600">₹{stallAlreadyPaid.toFixed(0)}</p>
                         </div>
                         <div className="p-3 bg-amber-500/10 rounded-lg">
                           <p className="text-xs text-muted-foreground">Pending Balance</p>
-                          <p className="text-lg font-semibold text-amber-600">₹{stallRemainingBalance.toFixed(0)}</p>
+                          <p className="text-base md:text-lg font-semibold text-amber-600">₹{stallRemainingBalance.toFixed(0)}</p>
                         </div>
                       </div>
 
@@ -2187,9 +2187,10 @@ export default function Billing() {
                               Maximum: ₹{stallRemainingBalance.toFixed(2)}
                             </p>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               variant="outline"
+                              size="sm"
                               onClick={() => {
                                 setShowStallPaymentForm(false);
                                 setStallPaymentAmount("");
@@ -2200,10 +2201,12 @@ export default function Billing() {
                             <Button
                               onClick={() => setStallPaymentAmount(stallRemainingBalance.toFixed(2))}
                               variant="secondary"
+                              size="sm"
                             >
                               Pay Full
                             </Button>
                             <Button
+                              size="sm"
                               onClick={() => {
                                 const amount = parseFloat(stallPaymentAmount);
                                 if (!amount || amount <= 0) {
@@ -2224,11 +2227,11 @@ export default function Billing() {
                               className="bg-green-600 hover:bg-green-700"
                             >
                               {createStallPaymentMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <Loader2 className="h-4 w-4 animate-spin mr-1" />
                               ) : (
-                                <Check className="h-4 w-4 mr-2" />
+                                <Check className="h-4 w-4 mr-1" />
                               )}
-                              Record Payment
+                              Record
                             </Button>
                           </div>
                         </div>
@@ -2246,20 +2249,20 @@ export default function Billing() {
                       {itemsSold.length === 0 ? (
                         <p className="text-muted-foreground text-center py-8">No items sold yet</p>
                       ) : (
-                        <div className="border border-border rounded-lg overflow-hidden">
-                          <div className="grid grid-cols-4 gap-4 p-3 bg-muted/50 text-sm font-medium text-muted-foreground border-b border-border">
-                            <div>Item Name</div>
-                            <div className="text-center">Quantity</div>
+                        <div className="border border-border rounded-lg overflow-hidden overflow-x-auto">
+                          <div className="grid grid-cols-4 gap-2 md:gap-4 p-2 md:p-3 bg-muted/50 text-xs md:text-sm font-medium text-muted-foreground border-b border-border min-w-[300px]">
+                            <div>Item</div>
+                            <div className="text-center">Qty</div>
                             <div className="text-right">Cost</div>
                             <div className="text-right">Total</div>
                           </div>
-                          <div className="divide-y divide-border">
+                          <div className="divide-y divide-border min-w-[300px]">
                             {itemsSold.map((item, idx) => (
-                              <div key={idx} className="grid grid-cols-4 gap-4 p-3 items-center">
-                                <div className="font-medium">{item.name}</div>
+                              <div key={idx} className="grid grid-cols-4 gap-2 md:gap-4 p-2 md:p-3 items-center text-sm">
+                                <div className="font-medium truncate">{item.name}</div>
                                 <div className="text-center">{item.quantity}</div>
-                                <div className="text-right text-muted-foreground">₹{item.cost.toFixed(2)}</div>
-                                <div className="text-right font-semibold text-primary">₹{item.total.toFixed(2)}</div>
+                                <div className="text-right text-muted-foreground text-xs md:text-sm">₹{item.cost.toFixed(0)}</div>
+                                <div className="text-right font-semibold text-primary text-xs md:text-sm">₹{item.total.toFixed(0)}</div>
                               </div>
                             ))}
                           </div>
