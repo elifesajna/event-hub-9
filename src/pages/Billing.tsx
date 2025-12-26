@@ -35,7 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useRef, useEffect } from "react";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -830,6 +831,12 @@ export default function Billing() {
   const totalCollectedFromStallRegs = stallPayments.reduce((sum, p) => sum + Number(p.amount_paid), 0);
   const totalCollectedFromOtherRegs = registrations.reduce((sum, reg) => sum + Number(reg.amount), 0);
   const totalSalesReturns = salesReturns.reduce((sum: number, r: any) => sum + Number(r.return_amount), 0);
+
+  // Panchayath options for searchable select
+  const panchayathOptions = useMemo(() => [
+    { value: "all", label: "All Panchayaths" },
+    ...panchayaths.map(p => ({ value: p.id, label: p.name }))
+  ], [panchayaths]);
 
   // Stall Summary calculations
   const summaryStalls = summaryPanchayath === "all" 
@@ -2039,17 +2046,17 @@ export default function Billing() {
                   <div className="grid md:grid-cols-2 gap-3 md:gap-4">
                     <div className="space-y-2">
                       <Label>Filter by Panchayath</Label>
-                      <Select value={summaryPanchayath} onValueChange={(val) => { setSummaryPanchayath(val); setSummaryStallId(""); }}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Panchayaths" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Panchayaths</SelectItem>
-                          {panchayaths.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        options={panchayathOptions}
+                        value={summaryPanchayath}
+                        onValueChange={(val) => { 
+                          setSummaryPanchayath(val || "all"); 
+                          setSummaryStallId(""); 
+                        }}
+                        placeholder="All Panchayaths"
+                        searchPlaceholder="Search panchayath..."
+                        className="w-full"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Select Stall</Label>
