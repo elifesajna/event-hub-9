@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -908,8 +908,21 @@ export default function Billing() {
   // Remaining balance to pay (only from paid bills)
   const stallRemainingBalance = Math.max(0, stallBalance - stallAlreadyPaid);
 
-  // Active view state
-  const [activeView, setActiveView] = useState<string | null>(null);
+  // Active view state with URL query param support
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeView, setActiveView] = useState<string | null>(() => {
+    const view = searchParams.get('view');
+    return view || null;
+  });
+
+  // Update URL when activeView changes
+  useEffect(() => {
+    if (activeView) {
+      setSearchParams({ view: activeView }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  }, [activeView, setSearchParams]);
 
   const renderCategoryDashboard = () => (
     <div className="grid md:grid-cols-2 gap-4 md:gap-6">
