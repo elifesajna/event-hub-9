@@ -25,7 +25,8 @@ import {
   ArrowLeft,
   ShoppingCart,
   ClipboardList,
-  Briefcase
+  Briefcase,
+  Wallet
 } from "lucide-react";
 import {
   Select,
@@ -94,6 +95,10 @@ export default function Billing() {
   // Stall Summary state
   const [summaryPanchayath, setSummaryPanchayath] = useState<string>("all");
   const [summaryStallId, setSummaryStallId] = useState<string>("");
+  
+  // Stall Payment state
+  const [showStallPaymentForm, setShowStallPaymentForm] = useState(false);
+  const [stallPaymentAmount, setStallPaymentAmount] = useState("");
 
   // Sales Return state
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
@@ -557,6 +562,33 @@ export default function Billing() {
     }
   });
 
+  // Create stall payment mutation
+  const createStallPaymentMutation = useMutation({
+    mutationFn: async (payment: { stall_id: string; amount_paid: number; narration: string }) => {
+      const { data, error } = await supabase
+        .from('payments')
+        .insert({
+          stall_id: payment.stall_id,
+          payment_type: 'participant',
+          amount_paid: payment.amount_paid,
+          narration: payment.narration
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stall_payments'] });
+      setShowStallPaymentForm(false);
+      setStallPaymentAmount("");
+      toast.success("Payment recorded successfully!");
+    },
+    onError: (error) => {
+      toast.error("Failed to record payment: " + error.message);
+    }
+  });
+
   const openEditDialog = (stall: Stall) => {
     setEditingStall(stall);
     setEditForm({
@@ -845,6 +877,26 @@ export default function Billing() {
   });
   const itemsSold = Array.from(itemsSoldMap.values()).sort((a, b) => b.total - a.total);
   const totalCost = itemsSold.reduce((sum, item) => sum + item.cost, 0);
+
+  // Calculate stall balance (what we owe the stall after commission deduction)
+  const stallBalance = stallBills.reduce((txSum: number, tx: any) => {
+    const items = Array.isArray(tx.items) ? tx.items as Array<{ price?: number; quantity?: number; event_margin?: number }> : [];
+    const txBalance = items.reduce((sum: number, item) => {
+      const itemTotal = Number(item.price || 0) * Number(item.quantity || 1);
+      const commission = Number(item.event_margin || 20);
+      const itemBalance = itemTotal * (1 - commission / 100);
+      return sum + itemBalance;
+    }, 0);
+    return txSum + txBalance;
+  }, 0);
+  
+  // Already paid to this stall
+  const stallAlreadyPaid = summaryStallId 
+    ? stallPayments.filter((p: any) => p.stall_id === summaryStallId).reduce((sum: number, p: any) => sum + (p.amount_paid || 0), 0)
+    : 0;
+  
+  // Remaining balance to pay
+  const stallRemainingBalance = Math.max(0, stallBalance - stallAlreadyPaid);
 
   // Active view state
   const [activeView, setActiveView] = useState<string | null>(null);
@@ -2078,7 +2130,110 @@ export default function Billing() {
                       <CardContent className="pt-4 md:pt-6 px-3 md:px-6">
                         <p className="text-xs md:text-sm text-muted-foreground">Commission</p>
                         <p className="text-xl md:text-2xl font-bold text-secondary-foreground">₹{stallCommission.toFixed(0)}</p>
-                      </CardContent>
+                    </CardContent>
+                  </Card>
+
+                  {/* Stall Payment Section */}
+                  <Card className="border-green-500/30">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Wallet className="h-5 w-5 text-green-600" />
+                        Stall Payment
+                      </CardTitle>
+                      {!showStallPaymentForm && stallRemainingBalance > 0 && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => setShowStallPaymentForm(true)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Make Payment
+                        </Button>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      {/* Payment Summary */}
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <p className="text-xs text-muted-foreground">Balance (After Commission)</p>
+                          <p className="text-lg font-semibold">₹{stallBalance.toFixed(0)}</p>
+                        </div>
+                        <div className="p-3 bg-green-500/10 rounded-lg">
+                          <p className="text-xs text-muted-foreground">Already Paid</p>
+                          <p className="text-lg font-semibold text-green-600">₹{stallAlreadyPaid.toFixed(0)}</p>
+                        </div>
+                        <div className="p-3 bg-amber-500/10 rounded-lg">
+                          <p className="text-xs text-muted-foreground">Pending Balance</p>
+                          <p className="text-lg font-semibold text-amber-600">₹{stallRemainingBalance.toFixed(0)}</p>
+                        </div>
+                      </div>
+
+                      {stallRemainingBalance <= 0 ? (
+                        <div className="flex items-center justify-center gap-2 py-4 text-green-600">
+                          <CheckCircle className="h-5 w-5" />
+                          <span className="font-medium">All payments completed</span>
+                        </div>
+                      ) : showStallPaymentForm ? (
+                        <div className="space-y-4 p-4 border border-border rounded-lg bg-background">
+                          <div className="space-y-2">
+                            <Label>Payment Amount</Label>
+                            <Input
+                              type="number"
+                              placeholder="Enter amount"
+                              value={stallPaymentAmount}
+                              onChange={(e) => setStallPaymentAmount(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Maximum: ₹{stallRemainingBalance.toFixed(2)}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowStallPaymentForm(false);
+                                setStallPaymentAmount("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={() => setStallPaymentAmount(stallRemainingBalance.toFixed(2))}
+                              variant="secondary"
+                            >
+                              Pay Full
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                const amount = parseFloat(stallPaymentAmount);
+                                if (!amount || amount <= 0) {
+                                  toast.error("Please enter a valid amount");
+                                  return;
+                                }
+                                if (amount > stallRemainingBalance) {
+                                  toast.error("Amount exceeds pending balance");
+                                  return;
+                                }
+                                createStallPaymentMutation.mutate({
+                                  stall_id: summaryStallId,
+                                  amount_paid: amount,
+                                  narration: `Payment to ${selectedSummaryStall?.counter_name || 'Stall'}`
+                                });
+                              }}
+                              disabled={createStallPaymentMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              {createStallPaymentMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              ) : (
+                                <Check className="h-4 w-4 mr-2" />
+                              )}
+                              Record Payment
+                            </Button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </CardContent>
                     </Card>
                   </div>
 
