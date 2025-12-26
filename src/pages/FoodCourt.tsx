@@ -27,7 +27,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -311,6 +312,12 @@ export default function FoodCourt() {
       return result.sort((a, b) => b.total_billed - a.total_billed);
     },
   });
+
+  // Panchayath options for searchable select
+  const panchayathOptions = useMemo(() => [
+    { value: "", label: "All Panchayaths" },
+    ...panchayaths.map(p => ({ value: p.id, label: p.name }))
+  ], [panchayaths]);
 
   // Filter verified enquiries by panchayath
   const filteredEnquiries = enquiryPanchayathFilter
@@ -736,16 +743,14 @@ export default function FoodCourt() {
 
           <TabsContent value="stalls">
             <div className="flex justify-between mb-4">
-              <select
+              <SearchableSelect
+                options={panchayathOptions}
                 value={stallPanchayathFilter}
-                onChange={(e) => setStallPanchayathFilter(e.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">All Panchayaths</option>
-                {panchayaths.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+                onValueChange={setStallPanchayathFilter}
+                placeholder="All Panchayaths"
+                searchPlaceholder="Search panchayath..."
+                className="w-[200px]"
+              />
               <Button onClick={() => setShowStallForm(!showStallForm)} variant="accent">
                 <Plus className="h-4 w-4 mr-2" />
                 Register Stall
@@ -788,17 +793,17 @@ export default function FoodCourt() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="panchayath">Panchayath</Label>
-                      <select
-                        id="panchayath"
+                      <SearchableSelect
+                        options={[
+                          { value: "", label: "Select Panchayath" },
+                          ...panchayaths.map(p => ({ value: p.id, label: p.name }))
+                        ]}
                         value={newStall.panchayath_id}
-                        onChange={(e) => setNewStall({ ...newStall, panchayath_id: e.target.value })}
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value="">Select Panchayath</option>
-                        {panchayaths.map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
+                        onValueChange={(val) => setNewStall({ ...newStall, panchayath_id: val })}
+                        placeholder="Select Panchayath"
+                        searchPlaceholder="Search panchayath..."
+                        className="w-full"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="stallPhone">Mobile</Label>
@@ -896,20 +901,18 @@ export default function FoodCourt() {
           <TabsContent value="products">
             <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
               <div className="flex gap-4 flex-wrap">
-                <select
+                <SearchableSelect
+                  options={panchayathOptions}
                   value={productPanchayathFilter}
-                  onChange={(e) => {
-                    setProductPanchayathFilter(e.target.value);
+                  onValueChange={(val) => {
+                    setProductPanchayathFilter(val);
                     setSelectedStall(""); // Reset stall selection when panchayath changes
                     setStallSearchQuery(""); // Reset search when panchayath changes
                   }}
-                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">All Panchayaths</option>
-                  {panchayaths.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                  placeholder="All Panchayaths"
+                  searchPlaceholder="Search panchayath..."
+                  className="w-[200px]"
+                />
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -1145,16 +1148,14 @@ export default function FoodCourt() {
 
           <TabsContent value="enquiries">
             <div className="flex justify-end mb-4">
-              <select
+              <SearchableSelect
+                options={panchayathOptions}
                 value={enquiryPanchayathFilter}
-                onChange={(e) => setEnquiryPanchayathFilter(e.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">All Panchayaths</option>
-                {panchayaths.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+                onValueChange={setEnquiryPanchayathFilter}
+                placeholder="All Panchayaths"
+                searchPlaceholder="Search panchayath..."
+                className="w-[200px]"
+              />
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1395,16 +1396,14 @@ export default function FoodCourt() {
               <CardContent>
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                  <select
+                  <SearchableSelect
+                    options={panchayathOptions}
                     value={counterPanchayathFilter}
-                    onChange={(e) => setCounterPanchayathFilter(e.target.value)}
-                    className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">All Panchayaths</option>
-                    {panchayaths.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                    onValueChange={setCounterPanchayathFilter}
+                    placeholder="All Panchayaths"
+                    searchPlaceholder="Search panchayath..."
+                    className="w-[200px]"
+                  />
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -1828,17 +1827,17 @@ export default function FoodCourt() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="editPanchayath">Panchayath</Label>
-                    <select
-                      id="editPanchayath"
+                    <SearchableSelect
+                      options={[
+                        { value: "", label: "Select Panchayath" },
+                        ...panchayaths.map(p => ({ value: p.id, label: p.name }))
+                      ]}
                       value={editStallData.panchayath_id}
-                      onChange={(e) => setEditStallData({ ...editStallData, panchayath_id: e.target.value })}
-                      className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">Select Panchayath</option>
-                      {panchayaths.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                      onValueChange={(val) => setEditStallData({ ...editStallData, panchayath_id: val })}
+                      placeholder="Select Panchayath"
+                      searchPlaceholder="Search panchayath..."
+                      className="w-full"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="editMobile">Mobile</Label>
