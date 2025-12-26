@@ -742,19 +742,28 @@ export default function FoodCourt() {
           </TabsList>
 
           <TabsContent value="stalls">
-            <div className="flex justify-between mb-4">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
               <SearchableSelect
                 options={panchayathOptions}
                 value={stallPanchayathFilter}
                 onValueChange={setStallPanchayathFilter}
                 placeholder="All Panchayaths"
                 searchPlaceholder="Search panchayath..."
-                className="w-[200px]"
+                className="w-full sm:w-[200px]"
               />
-              <Button onClick={() => setShowStallForm(!showStallForm)} variant="accent">
-                <Plus className="h-4 w-4 mr-2" />
-                Register Stall
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/billing?view=registrations')}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Paid Stall Registration
+                </Button>
+                <Button onClick={() => setShowStallForm(!showStallForm)} variant="accent">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Register Stall
+                </Button>
+              </div>
             </div>
 
             {showStallForm && (

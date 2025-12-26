@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useState, useRef, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -66,6 +67,7 @@ interface ReturnItem extends BillItem {
 
 export default function Billing() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [selectedStalls, setSelectedStalls] = useState<string[]>([]);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -1785,6 +1787,16 @@ export default function Billing() {
 
           <TabsContent value="registrations">
             <div className="space-y-4 md:space-y-6">
+              {/* Back to Food Court button */}
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/food-court')}
+                >
+                  <Store className="h-4 w-4 mr-2" />
+                  Back to Food Court
+                </Button>
+              </div>
               {/* Stall Registrations from Food Court */}
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <Card>
