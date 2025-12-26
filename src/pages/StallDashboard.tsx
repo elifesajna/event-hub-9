@@ -35,13 +35,22 @@ export default function StallDashboard() {
     }
   }, [stall, authLoading, navigate]);
 
-  // Fetch billing transactions for this stall (only cash orders)
+  // Fetch billing transactions for this stall (only cash orders) and auto-deliver pending ones
   const {
     data: transactions = []
   } = useQuery({
     queryKey: ["stall-transactions", stall?.id],
     queryFn: async () => {
       if (!stall?.id) return [];
+      
+      // First, auto-deliver all pending orders
+      await supabase
+        .from("billing_transactions")
+        .update({ status: "delivered" })
+        .eq("stall_id", stall.id)
+        .neq("status", "delivered");
+      
+      // Then fetch all transactions
       const {
         data,
         error
