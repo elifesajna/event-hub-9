@@ -878,8 +878,9 @@ export default function Billing() {
   const itemsSold = Array.from(itemsSoldMap.values()).sort((a, b) => b.total - a.total);
   const totalCost = itemsSold.reduce((sum, item) => sum + item.cost, 0);
 
-  // Calculate stall balance (what we owe the stall after commission deduction)
-  const stallBalance = stallBills.reduce((txSum: number, tx: any) => {
+  // Calculate stall balance (only from PAID bills - receipt clicked)
+  const paidStallBills = stallBills.filter((b: any) => b.status === 'paid');
+  const stallBalance = paidStallBills.reduce((txSum: number, tx: any) => {
     const items = Array.isArray(tx.items) ? tx.items as Array<{ price?: number; quantity?: number; event_margin?: number }> : [];
     const txBalance = items.reduce((sum: number, item) => {
       const itemTotal = Number(item.price || 0) * Number(item.quantity || 1);
@@ -895,7 +896,7 @@ export default function Billing() {
     ? stallPayments.filter((p: any) => p.stall_id === summaryStallId).reduce((sum: number, p: any) => sum + (p.amount_paid || 0), 0)
     : 0;
   
-  // Remaining balance to pay
+  // Remaining balance to pay (only from paid bills)
   const stallRemainingBalance = Math.max(0, stallBalance - stallAlreadyPaid);
 
   // Active view state
