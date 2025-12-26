@@ -824,22 +824,27 @@ export default function Billing() {
     }, 0);
   }, 0);
   
-  // Items sold details
-  const itemsSoldMap = new Map<string, { name: string; quantity: number; total: number }>();
+  // Items sold details with cost
+  const itemsSoldMap = new Map<string, { name: string; quantity: number; total: number; cost: number }>();
   stallBills.forEach((bill: any) => {
     const items = bill.items as BillItem[];
     if (!Array.isArray(items)) return;
     items.forEach(item => {
+      // Find product to get cost price
+      const product = products.find(p => p.item_name === item.name);
+      const costPrice = product?.cost_price || 0;
       const existing = itemsSoldMap.get(item.name);
       if (existing) {
         existing.quantity += item.quantity;
         existing.total += item.price * item.quantity;
+        existing.cost += costPrice * item.quantity;
       } else {
-        itemsSoldMap.set(item.name, { name: item.name, quantity: item.quantity, total: item.price * item.quantity });
+        itemsSoldMap.set(item.name, { name: item.name, quantity: item.quantity, total: item.price * item.quantity, cost: costPrice * item.quantity });
       }
     });
   });
   const itemsSold = Array.from(itemsSoldMap.values()).sort((a, b) => b.total - a.total);
+  const totalCost = itemsSold.reduce((sum, item) => sum + item.cost, 0);
 
   // Active view state
   const [activeView, setActiveView] = useState<string | null>(null);
@@ -2057,10 +2062,10 @@ export default function Billing() {
                         <p className="text-xs text-muted-foreground mt-1">{stallBills.length} bills</p>
                       </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5">
                       <CardContent className="pt-4 md:pt-6 px-3 md:px-6">
-                        <p className="text-xs md:text-sm text-muted-foreground">Paid Sales</p>
-                        <p className="text-xl md:text-2xl font-bold text-green-600">₹{stallPaidSales.toFixed(0)}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Total Cost</p>
+                        <p className="text-xl md:text-2xl font-bold text-blue-600">₹{totalCost.toFixed(0)}</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5">
@@ -2087,16 +2092,18 @@ export default function Billing() {
                         <p className="text-muted-foreground text-center py-8">No items sold yet</p>
                       ) : (
                         <div className="border border-border rounded-lg overflow-hidden">
-                          <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 text-sm font-medium text-muted-foreground border-b border-border">
+                          <div className="grid grid-cols-4 gap-4 p-3 bg-muted/50 text-sm font-medium text-muted-foreground border-b border-border">
                             <div>Item Name</div>
                             <div className="text-center">Quantity</div>
+                            <div className="text-right">Cost</div>
                             <div className="text-right">Total</div>
                           </div>
                           <div className="divide-y divide-border">
                             {itemsSold.map((item, idx) => (
-                              <div key={idx} className="grid grid-cols-3 gap-4 p-3 items-center">
+                              <div key={idx} className="grid grid-cols-4 gap-4 p-3 items-center">
                                 <div className="font-medium">{item.name}</div>
                                 <div className="text-center">{item.quantity}</div>
+                                <div className="text-right text-muted-foreground">₹{item.cost.toFixed(2)}</div>
                                 <div className="text-right font-semibold text-primary">₹{item.total.toFixed(2)}</div>
                               </div>
                             ))}
