@@ -113,6 +113,10 @@ export default function Billing() {
   });
   const [returnReason, setReturnReason] = useState("");
 
+  // Recent Bills pagination state
+  const [recentBillsPage, setRecentBillsPage] = useState(1);
+  const RECENT_BILLS_PER_PAGE = 10;
+
   // Registration Edit/Delete state
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
   const [editRegForm, setEditRegForm] = useState({
@@ -1371,44 +1375,127 @@ export default function Billing() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Bills</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Today's Bills</span>
+                    {(() => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const todayBills = bills.filter((bill: any) => {
+                        const billDate = new Date(bill.created_at);
+                        billDate.setHours(0, 0, 0, 0);
+                        return billDate.getTime() === today.getTime();
+                      });
+                      return <Badge variant="secondary">{todayBills.length}</Badge>;
+                    })()}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {billsLoading ? (
                     <div className="flex justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
-                  ) : bills.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No bills generated yet</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {bills.slice(0, 5).map((bill: any) => (
-                        <div key={bill.id} className="p-4 border border-border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <Badge variant="outline" className="mr-2">#{bill.serial_number || '-'}</Badge>
-                              <span className="font-semibold text-foreground">
-                                {bill.stalls?.counter_name || getStallName(bill.stall_id)}
-                              </span>
+                  ) : (() => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const todayBills = bills.filter((bill: any) => {
+                      const billDate = new Date(bill.created_at);
+                      billDate.setHours(0, 0, 0, 0);
+                      return billDate.getTime() === today.getTime();
+                    });
+                    const totalPages = Math.ceil(todayBills.length / RECENT_BILLS_PER_PAGE);
+                    const startIndex = (recentBillsPage - 1) * RECENT_BILLS_PER_PAGE;
+                    const paginatedBills = todayBills.slice(startIndex, startIndex + RECENT_BILLS_PER_PAGE);
+
+                    if (todayBills.length === 0) {
+                      return <p className="text-muted-foreground text-center py-8">No bills generated today</p>;
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {paginatedBills.map((bill: any) => (
+                          <div key={bill.id} className="p-4 border border-border rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <div>
+                                <Badge variant="outline" className="mr-2">#{bill.serial_number || '-'}</Badge>
+                                <span className="font-semibold text-foreground">
+                                  {bill.stalls?.counter_name || getStallName(bill.stall_id)}
+                                </span>
+                              </div>
+                              <Badge variant={bill.status === 'paid' ? 'default' : 'secondary'}>
+                                {bill.status === 'paid' ? 'Paid' : 'Pending'}
+                              </Badge>
                             </div>
-                            <Badge variant={bill.status === 'paid' ? 'default' : 'secondary'}>
-                              {bill.status === 'paid' ? 'Paid' : 'Pending'}
-                            </Badge>
+                            {bill.customer_name && (
+                              <p className="text-sm text-foreground">Customer: {bill.customer_name}</p>
+                            )}
+                            {bill.customer_mobile && (
+                              <p className="text-xs text-muted-foreground">Mobile: {bill.customer_mobile}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(bill.created_at)}
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-lg font-bold text-primary">₹{bill.total}</p>
+                              <div className="flex gap-2">
+                                {bill.status !== 'paid' && (
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => markPaidMutation.mutate(bill.id)}
+                                    disabled={markPaidMutation.isPending}
+                                  >
+                                    {markPaidMutation.isPending ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Check className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => requestBillAction('edit', bill)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => requestBillAction('delete', bill)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                          {bill.customer_name && (
-                            <p className="text-sm text-foreground">Customer: {bill.customer_name}</p>
-                          )}
-                          {bill.customer_mobile && (
-                            <p className="text-xs text-muted-foreground">Mobile: {bill.customer_mobile}</p>
-                          )}
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(bill.created_at)}
-                          </p>
-                          <p className="text-lg font-bold text-primary mt-1">₹{bill.total}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-center gap-2 pt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setRecentBillsPage(p => Math.max(1, p - 1))}
+                              disabled={recentBillsPage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <span className="text-sm text-muted-foreground px-2">
+                              Page {recentBillsPage} of {totalPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setRecentBillsPage(p => Math.min(totalPages, p + 1))}
+                              disabled={recentBillsPage === totalPages}
+                            >
+                              Next
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </div>
