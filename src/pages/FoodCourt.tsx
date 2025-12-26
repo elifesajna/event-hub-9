@@ -1570,9 +1570,33 @@ export default function FoodCourt() {
                 <div className="mt-6">
                   <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    Stalls without counter numbers ({stalls.filter(s => !s.counter_number).length})
+                    Stalls without counter numbers ({stalls
+                      .filter(s => !s.counter_number)
+                      .filter(s => !counterPanchayathFilter || s.panchayath_id === counterPanchayathFilter)
+                      .filter(s => {
+                        if (!counterSearchQuery) return true;
+                        const query = counterSearchQuery.toLowerCase();
+                        return (
+                          s.counter_name.toLowerCase().includes(query) ||
+                          s.participant_name.toLowerCase().includes(query) ||
+                          s.mobile?.toLowerCase().includes(query) ||
+                          s.panchayaths?.name?.toLowerCase().includes(query)
+                        );
+                      }).length})
                   </h3>
-                  {stalls.filter(s => !s.counter_number).length > 0 && (
+                  {stalls
+                    .filter(s => !s.counter_number)
+                    .filter(s => !counterPanchayathFilter || s.panchayath_id === counterPanchayathFilter)
+                    .filter(s => {
+                      if (!counterSearchQuery) return true;
+                      const query = counterSearchQuery.toLowerCase();
+                      return (
+                        s.counter_name.toLowerCase().includes(query) ||
+                        s.participant_name.toLowerCase().includes(query) ||
+                        s.mobile?.toLowerCase().includes(query) ||
+                        s.panchayaths?.name?.toLowerCase().includes(query)
+                      );
+                    }).length > 0 && (
                     <div className="border rounded-lg overflow-auto">
                       <Table>
                         <TableHeader>
@@ -1580,17 +1604,30 @@ export default function FoodCourt() {
                             <TableHead>Stall Name</TableHead>
                             <TableHead>Participant</TableHead>
                             <TableHead className="hidden md:table-cell">Mobile</TableHead>
+                            <TableHead className="hidden md:table-cell">Panchayath</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {stalls
                             .filter(s => !s.counter_number)
+                            .filter(s => !counterPanchayathFilter || s.panchayath_id === counterPanchayathFilter)
+                            .filter(s => {
+                              if (!counterSearchQuery) return true;
+                              const query = counterSearchQuery.toLowerCase();
+                              return (
+                                s.counter_name.toLowerCase().includes(query) ||
+                                s.participant_name.toLowerCase().includes(query) ||
+                                s.mobile?.toLowerCase().includes(query) ||
+                                s.panchayaths?.name?.toLowerCase().includes(query)
+                              );
+                            })
                             .map((stall) => (
                               <TableRow key={stall.id}>
                                 <TableCell className="font-medium">{stall.counter_name}</TableCell>
                                 <TableCell>{stall.participant_name}</TableCell>
                                 <TableCell className="hidden md:table-cell">{stall.mobile || "-"}</TableCell>
+                                <TableCell className="hidden md:table-cell">{stall.panchayaths?.name || "-"}</TableCell>
                                 <TableCell className="text-right">
                                   <Button
                                     variant="outline"
