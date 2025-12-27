@@ -121,6 +121,8 @@ export default function FoodCourt() {
   const [convertStallData, setConvertStallData] = useState({ counter_name: "", registration_fee: "" });
   const [productsListSearchTerm, setProductsListSearchTerm] = useState("");
   const [stallsSalesSearchTerm, setStallsSalesSearchTerm] = useState("");
+  const [productsListPanchayathFilter, setProductsListPanchayathFilter] = useState<string>("");
+  const [stallsSalesPanchayathFilter, setStallsSalesPanchayathFilter] = useState<string>("");
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editProductData, setEditProductData] = useState({
@@ -337,20 +339,43 @@ export default function FoodCourt() {
     ? products.filter(p => stallIdsForPanchayath.includes(p.stall_id))
     : products;
 
+  // Get stall panchayath map for filtering products by panchayath
+  const stallPanchayathMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    stalls.forEach(s => {
+      map[s.id] = s.panchayath_id;
+    });
+    return map;
+  }, [stalls]);
+
+  // Get stall id to panchayath id mapping from productsWithBilling stall names
+  const stallNameToPanchayathMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    stalls.forEach(s => {
+      map[s.counter_name] = s.panchayath_id;
+    });
+    return map;
+  }, [stalls]);
+
   // Filter for Products List tab
-  const filteredProductsList = productsWithBilling.filter((p) =>
-    p.item_name.toLowerCase().includes(productsListSearchTerm.toLowerCase()) ||
-    p.stall_name.toLowerCase().includes(productsListSearchTerm.toLowerCase()) ||
-    (p.product_number && p.product_number.includes(productsListSearchTerm))
-  );
+  const filteredProductsList = productsWithBilling.filter((p) => {
+    const matchesPanchayath = !productsListPanchayathFilter || stallNameToPanchayathMap[p.stall_name] === productsListPanchayathFilter;
+    const matchesSearch = p.item_name.toLowerCase().includes(productsListSearchTerm.toLowerCase()) ||
+      p.stall_name.toLowerCase().includes(productsListSearchTerm.toLowerCase()) ||
+      (p.product_number && p.product_number.includes(productsListSearchTerm));
+    return matchesPanchayath && matchesSearch;
+  });
 
   // Filter for Stalls Sales tab
-  const filteredStallsSales = stallsWithBilling.filter((s) =>
-    s.counter_name.toLowerCase().includes(stallsSalesSearchTerm.toLowerCase()) ||
-    s.participant_name.toLowerCase().includes(stallsSalesSearchTerm.toLowerCase()) ||
-    (s.mobile && s.mobile.includes(stallsSalesSearchTerm)) ||
-    (s.counter_number && s.counter_number.includes(stallsSalesSearchTerm))
-  );
+  const filteredStallsSales = stallsWithBilling.filter((s) => {
+    const matchesPanchayath = !stallsSalesPanchayathFilter || 
+      stalls.find(stall => stall.id === s.id)?.panchayath_id === stallsSalesPanchayathFilter;
+    const matchesSearch = s.counter_name.toLowerCase().includes(stallsSalesSearchTerm.toLowerCase()) ||
+      s.participant_name.toLowerCase().includes(stallsSalesSearchTerm.toLowerCase()) ||
+      (s.mobile && s.mobile.includes(stallsSalesSearchTerm)) ||
+      (s.counter_number && s.counter_number.includes(stallsSalesSearchTerm));
+    return matchesPanchayath && matchesSearch;
+  });
 
   // Add stall mutation
   const addStallMutation = useMutation({
@@ -1240,6 +1265,14 @@ export default function FoodCourt() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <SearchableSelect
+                    options={panchayathOptions}
+                    value={productsListPanchayathFilter}
+                    onValueChange={setProductsListPanchayathFilter}
+                    placeholder="All Panchayaths"
+                    searchPlaceholder="Search panchayath..."
+                    className="w-[200px]"
+                  />
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -1309,6 +1342,14 @@ export default function FoodCourt() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <SearchableSelect
+                    options={panchayathOptions}
+                    value={stallsSalesPanchayathFilter}
+                    onValueChange={setStallsSalesPanchayathFilter}
+                    placeholder="All Panchayaths"
+                    searchPlaceholder="Search panchayath..."
+                    className="w-[200px]"
+                  />
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
