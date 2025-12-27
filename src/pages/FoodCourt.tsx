@@ -1300,24 +1300,38 @@ export default function FoodCourt() {
                           <TableHead className="text-right">Selling Price</TableHead>
                           <TableHead className="text-right">Qty Sold</TableHead>
                           <TableHead className="text-right">Total Billed</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredProductsList.map((product) => (
-                          <TableRow key={product.id}>
-                            <TableCell className="font-medium">{product.product_number || "-"}</TableCell>
-                            <TableCell>{product.item_name}</TableCell>
-                            <TableCell>{product.stall_name}</TableCell>
-                            <TableCell className="text-right">₹{product.cost_price.toFixed(2)}</TableCell>
-                            <TableCell className="text-right">
-                              {product.selling_price ? `₹${product.selling_price.toFixed(2)}` : "-"}
-                            </TableCell>
-                            <TableCell className="text-right">{product.total_quantity}</TableCell>
-                            <TableCell className="text-right font-semibold text-green-600">
-                              ₹{product.total_billed.toFixed(2)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {filteredProductsList.map((product) => {
+                          const originalProduct = products.find(p => p.id === product.id);
+                          return (
+                            <TableRow key={product.id}>
+                              <TableCell className="font-medium">{product.product_number || "-"}</TableCell>
+                              <TableCell>{product.item_name}</TableCell>
+                              <TableCell>{product.stall_name}</TableCell>
+                              <TableCell className="text-right">₹{product.cost_price.toFixed(2)}</TableCell>
+                              <TableCell className="text-right">
+                                {product.selling_price ? `₹${product.selling_price.toFixed(2)}` : "-"}
+                              </TableCell>
+                              <TableCell className="text-right">{product.total_quantity}</TableCell>
+                              <TableCell className="text-right font-semibold text-green-600">
+                                ₹{product.total_billed.toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => originalProduct && openEditProduct(originalProduct)}
+                                  disabled={!originalProduct}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
