@@ -26,8 +26,13 @@ import {
   ShoppingCart,
   ClipboardList,
   Briefcase,
-  Wallet
+  Wallet,
+  CalendarIcon
 } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -124,6 +129,9 @@ export default function Billing() {
   // Recent Bills pagination state
   const [recentBillsPage, setRecentBillsPage] = useState(1);
   const RECENT_BILLS_PER_PAGE = 10;
+  
+  // Bills date filter state
+  const [billsFilterDate, setBillsFilterDate] = useState<Date>(new Date());
 
   // Registration Edit/Delete state
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
@@ -1455,18 +1463,48 @@ export default function Billing() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Today's Bills</span>
-                    {(() => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      const todayBills = bills.filter((bill: any) => {
-                        const billDate = new Date(bill.created_at);
-                        billDate.setHours(0, 0, 0, 0);
-                        return billDate.getTime() === today.getTime();
-                      });
-                      return <Badge variant="secondary">{todayBills.length}</Badge>;
-                    })()}
+                  <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span>Bills</span>
+                      {(() => {
+                        const filterDate = new Date(billsFilterDate);
+                        filterDate.setHours(0, 0, 0, 0);
+                        const filteredBills = bills.filter((bill: any) => {
+                          const billDate = new Date(bill.created_at);
+                          billDate.setHours(0, 0, 0, 0);
+                          return billDate.getTime() === filterDate.getTime();
+                        });
+                        return <Badge variant="secondary">{filteredBills.length}</Badge>;
+                      })()}
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[180px] justify-start text-left font-normal",
+                            !billsFilterDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {billsFilterDate ? format(billsFilterDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="single"
+                          selected={billsFilterDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              setBillsFilterDate(date);
+                              setRecentBillsPage(1);
+                            }
+                          }}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1475,19 +1513,19 @@ export default function Billing() {
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                   ) : (() => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const todayBills = bills.filter((bill: any) => {
+                    const filterDate = new Date(billsFilterDate);
+                    filterDate.setHours(0, 0, 0, 0);
+                    const filteredBills = bills.filter((bill: any) => {
                       const billDate = new Date(bill.created_at);
                       billDate.setHours(0, 0, 0, 0);
-                      return billDate.getTime() === today.getTime();
+                      return billDate.getTime() === filterDate.getTime();
                     });
-                    const totalPages = Math.ceil(todayBills.length / RECENT_BILLS_PER_PAGE);
+                    const totalPages = Math.ceil(filteredBills.length / RECENT_BILLS_PER_PAGE);
                     const startIndex = (recentBillsPage - 1) * RECENT_BILLS_PER_PAGE;
-                    const paginatedBills = todayBills.slice(startIndex, startIndex + RECENT_BILLS_PER_PAGE);
+                    const paginatedBills = filteredBills.slice(startIndex, startIndex + RECENT_BILLS_PER_PAGE);
 
-                    if (todayBills.length === 0) {
-                      return <p className="text-muted-foreground text-center py-8">No bills generated today</p>;
+                    if (filteredBills.length === 0) {
+                      return <p className="text-muted-foreground text-center py-8">No bills for selected date</p>;
                     }
 
                     return (
