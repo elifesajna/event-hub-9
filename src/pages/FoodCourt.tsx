@@ -1339,8 +1339,19 @@ export default function FoodCourt() {
                       <TableBody>
                         {filteredProductsList.map((product) => {
                           const originalProduct = products.find(p => p.id === product.id);
+                          // Calculate margin percentage
+                          const marginPercent = product.selling_price && product.cost_price > 0
+                            ? ((product.selling_price - product.cost_price) / product.cost_price) * 100
+                            : null;
+                          const marginColorClass = marginPercent === null 
+                            ? "" 
+                            : marginPercent < 10 
+                              ? "bg-red-100 dark:bg-red-900/30" 
+                              : marginPercent <= 20 
+                                ? "bg-orange-100 dark:bg-orange-900/30" 
+                                : "bg-green-100 dark:bg-green-900/30";
                           return (
-                            <TableRow key={product.id}>
+                            <TableRow key={product.id} className={marginColorClass}>
                               <TableCell className="font-medium">{product.product_number || "-"}</TableCell>
                               <TableCell>{product.item_name}</TableCell>
                               <TableCell>{product.stall_name}</TableCell>
