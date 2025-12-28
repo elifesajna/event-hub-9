@@ -375,9 +375,10 @@ export default function FoodCourt() {
         uniqueCounters.add(s.counter_number);
       }
     });
-    return Array.from(uniqueCounters)
+    const counterOptions = Array.from(uniqueCounters)
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
       .map(c => ({ value: c, label: `Counter ${c}` }));
+    return [{ value: "", label: "All Products" }, ...counterOptions];
   }, [stalls]);
 
   // Filter for Products List tab
