@@ -122,6 +122,7 @@ export default function FoodCourt() {
   const [productsListSearchTerm, setProductsListSearchTerm] = useState("");
   const [stallsSalesSearchTerm, setStallsSalesSearchTerm] = useState("");
   const [productsListPanchayathFilter, setProductsListPanchayathFilter] = useState<string>("");
+  const [productsListCounterFilter, setProductsListCounterFilter] = useState<string>("");
   const [stallsSalesPanchayathFilter, setStallsSalesPanchayathFilter] = useState<string>("");
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -357,13 +358,36 @@ export default function FoodCourt() {
     return map;
   }, [stalls]);
 
+  // Get stall counter number map for filtering
+  const stallNameToCounterMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    stalls.forEach(s => {
+      map[s.counter_name] = s.counter_number || null;
+    });
+    return map;
+  }, [stalls]);
+
+  // Counter number options for Products List filter
+  const counterNumberOptions = useMemo(() => {
+    const uniqueCounters = new Set<string>();
+    stalls.forEach(s => {
+      if (s.counter_number) {
+        uniqueCounters.add(s.counter_number);
+      }
+    });
+    return Array.from(uniqueCounters)
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .map(c => ({ value: c, label: `Counter ${c}` }));
+  }, [stalls]);
+
   // Filter for Products List tab
   const filteredProductsList = productsWithBilling.filter((p) => {
     const matchesPanchayath = !productsListPanchayathFilter || stallNameToPanchayathMap[p.stall_name] === productsListPanchayathFilter;
+    const matchesCounter = !productsListCounterFilter || stallNameToCounterMap[p.stall_name] === productsListCounterFilter;
     const matchesSearch = p.item_name.toLowerCase().includes(productsListSearchTerm.toLowerCase()) ||
       p.stall_name.toLowerCase().includes(productsListSearchTerm.toLowerCase()) ||
       (p.product_number && p.product_number.includes(productsListSearchTerm));
-    return matchesPanchayath && matchesSearch;
+    return matchesPanchayath && matchesCounter && matchesSearch;
   });
 
   // Filter for Stalls Sales tab
@@ -1272,6 +1296,14 @@ export default function FoodCourt() {
                     placeholder="All Panchayaths"
                     searchPlaceholder="Search panchayath..."
                     className="w-[200px]"
+                  />
+                  <SearchableSelect
+                    options={counterNumberOptions}
+                    value={productsListCounterFilter}
+                    onValueChange={setProductsListCounterFilter}
+                    placeholder="All Counters"
+                    searchPlaceholder="Search counter..."
+                    className="w-[180px]"
                   />
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
