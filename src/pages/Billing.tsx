@@ -2148,8 +2148,19 @@ export default function Billing() {
                         options={summaryCounterNumberOptions}
                         value={summaryCounterNumber}
                         onValueChange={(val) => { 
-                          setSummaryCounterNumber(val || "all"); 
-                          setSummaryStallId(""); 
+                          const newCounterNumber = val || "all";
+                          setSummaryCounterNumber(newCounterNumber);
+                          // Auto-select stall if only one matches the new filter
+                          const matchingStalls = allStalls.filter(s => {
+                            const matchesPanchayath = summaryPanchayath === "all" || s.panchayath_id === summaryPanchayath;
+                            const matchesCounter = newCounterNumber === "all" || s.counter_number === newCounterNumber;
+                            return matchesPanchayath && matchesCounter;
+                          });
+                          if (matchingStalls.length === 1) {
+                            setSummaryStallId(matchingStalls[0].id);
+                          } else {
+                            setSummaryStallId("");
+                          }
                         }}
                         placeholder="All Counter Numbers"
                         searchPlaceholder="Search counter..."
