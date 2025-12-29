@@ -102,6 +102,7 @@ export default function Billing() {
 
   // Stall Summary state
   const [summaryPanchayath, setSummaryPanchayath] = useState<string>("all");
+  const [summaryCounterNumber, setSummaryCounterNumber] = useState<string>("all");
   const [summaryStallId, setSummaryStallId] = useState<string>("");
   
   // Stall Payment state
@@ -848,10 +849,30 @@ export default function Billing() {
     ...panchayaths.map(p => ({ value: p.id, label: p.name }))
   ], [panchayaths]);
 
+  // Counter number options for stall summary
+  const summaryCounterNumberOptions = useMemo(() => {
+    const counterNumbers = allStalls
+      .filter(s => s.counter_number)
+      .map(s => s.counter_number!)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort((a, b) => {
+        const numA = parseInt(a, 10);
+        const numB = parseInt(b, 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.localeCompare(b);
+      });
+    return [
+      { value: "all", label: "All Counter Numbers" },
+      ...counterNumbers.map(cn => ({ value: cn, label: `#${cn}` }))
+    ];
+  }, [allStalls]);
+
   // Stall Summary calculations
-  const summaryStalls = summaryPanchayath === "all" 
-    ? allStalls 
-    : allStalls.filter(s => s.panchayath_id === summaryPanchayath);
+  const summaryStalls = allStalls.filter(s => {
+    const matchesPanchayath = summaryPanchayath === "all" || s.panchayath_id === summaryPanchayath;
+    const matchesCounterNumber = summaryCounterNumber === "all" || s.counter_number === summaryCounterNumber;
+    return matchesPanchayath && matchesCounterNumber;
+  });
   
   const selectedSummaryStall = summaryStallId ? allStalls.find(s => s.id === summaryStallId) : null;
   
@@ -2106,7 +2127,7 @@ export default function Billing() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="grid md:grid-cols-3 gap-3 md:gap-4">
                     <div className="space-y-2">
                       <Label>Filter by Panchayath</Label>
                       <SearchableSelect
@@ -2118,6 +2139,20 @@ export default function Billing() {
                         }}
                         placeholder="All Panchayaths"
                         searchPlaceholder="Search panchayath..."
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Filter by Counter Number</Label>
+                      <SearchableSelect
+                        options={summaryCounterNumberOptions}
+                        value={summaryCounterNumber}
+                        onValueChange={(val) => { 
+                          setSummaryCounterNumber(val || "all"); 
+                          setSummaryStallId(""); 
+                        }}
+                        placeholder="All Counter Numbers"
+                        searchPlaceholder="Search counter..."
                         className="w-full"
                       />
                     </div>
